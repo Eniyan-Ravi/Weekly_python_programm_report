@@ -1,0 +1,15 @@
+#calculater using imported functions from another file 
+import calculator as cal
+a=int(input("Enter a:"))
+b=int(input("Enter b:"))
+print("The below opperation are done by importing calculater.py")
+print("Addition")
+print(cal.add(a,b))
+print("Subtraction")
+print(cal.sub(a,b))
+print("Multiply")
+print(cal.mul(a,b))
+print("Division")
+print(cal.div(a,b))
+print("Square of a")
+print(cal.squire(a))
