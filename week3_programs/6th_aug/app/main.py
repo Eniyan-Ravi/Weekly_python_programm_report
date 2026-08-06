@@ -1,6 +1,6 @@
 #main
 from typing import Annotated
-from pydantic import Field
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session 
 from fastapi import FastAPI, Depends, HTTPException, Path, status
 from app import model
@@ -19,6 +19,12 @@ def get_db():
         db.close()
 
 db_dependency = Annotated[Session, Depends(get_db)]
+
+class TodoRequest(BaseModel):
+    title : str = Field(min_length=3)
+    description : str = Field(min_length=3, max_length=100)
+    priority : int = Field(gt=0, lt=6)
+    complete : bool
 
 @app.get("/")
 async def real_all(db: Annotated[Session, Depends(get_db)]):
