@@ -18,8 +18,8 @@ class User(Base):
 class Category(Base):
     __tablename__ = "category"
     id : Mapped[int] = mapped_column(Integer,primary_key=True, index=True)
-    name : Mapped[str] = mapped_column(String(150))
-    type : Mapped[str] = mapped_column(String(150))
+    name : Mapped[str] = mapped_column(String(150))# "OTT", "Recharge", "Electronics"
+    type : Mapped[str] = mapped_column(String(150))# "subscription" or "emi"
 
 
 
@@ -27,8 +27,8 @@ class PaymentMethod(Base):
     __tablename__ = "paymentmethod"
     id : Mapped[int] = mapped_column(Integer,primary_key=True,index=True)
     user_id : Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
-    type : Mapped[str] = mapped_column(String(50))
-    provider_name : Mapped[str] = mapped_column(String(50))
+    type : Mapped[str] = mapped_column(String(50))# "card", "upi", "netbanking", "wallet", "cash"
+    provider_name : Mapped[str] = mapped_column(String(50))#"HDFC", "GPay", "ICIC"
     is_default : Mapped[bool] = mapped_column(Boolean, default=False)
 
 
@@ -38,12 +38,12 @@ class Subscription(Base):
     user_id : Mapped[int] = mapped_column(ForeignKey("users.id"))
     category_id : Mapped[int] = mapped_column(ForeignKey("category.id"))
     payment_method_id : Mapped[int] = mapped_column(ForeignKey("paymentmethod.id"))
-    name : Mapped[str] = mapped_column(String(40))
-    amount : Mapped[float] = mapped_column(Float, nullable=False)
-    billing_cycle : Mapped[str] = mapped_column(String(20))
+    name : Mapped[str] = mapped_column(String(40))# "Netflix", "Jio ", "Airtel Wifi"
+    amount : Mapped[float] = mapped_column(Float, nullable=False)# recurring charge amount
+    billing_cycle : Mapped[str] = mapped_column(String(20)) #"monthly", "yearly", "weekly"
     start_date : Mapped[datetime] = mapped_column(DateTime)
     next_due_date : Mapped[datetime] = mapped_column(DateTime)
-    status : Mapped[str] = mapped_column(String(20),nullable=False)
+    status : Mapped[str] = mapped_column(String(20),nullable=False)# "active", "paused", "cancelled"
     auto_renew : Mapped[bool] = mapped_column(Boolean, default=False)
 
 
@@ -59,6 +59,6 @@ class EMI(Base):
     monthly_installment : Mapped[float] = mapped_column(Float)
     start_date : Mapped[datetime] = mapped_column(DateTime)
     next_due_date : Mapped[datetime] = mapped_column(DateTime)
-    installments_paid : Mapped[float] = mapped_column(Float,default=0)
+    installments_paid : Mapped[int] = mapped_column(Integer,default=0)
     installments_remaining : Mapped[int] = mapped_column(Integer)
     status : Mapped[str] = mapped_column(String(30))
