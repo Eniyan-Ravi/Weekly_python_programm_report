@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, EmailStr
-from datetime import datetime
+from datetime import date
 
 
 class UserBasic(BaseModel):
@@ -16,7 +16,7 @@ class UserCreate(UserBasic):
 
 class UserOut(UserBasic):
     id : int
-    created_at : datetime
+    created_at : date
     class Config:
         from_attributes = True
 
@@ -76,8 +76,8 @@ class SubscriptionBase(BaseModel):
     name: str = Field(min_length=2, max_length=50)
     amount: float
     billing_cycle: str = Field(min_length=2)
-    start_date: datetime
-    next_due_date: datetime
+    start_date: date
+    next_due_date: date
     status: str = Field(min_length=2, max_length=30)
     auto_renew: bool = Field(default=False)
 
@@ -106,26 +106,57 @@ class SubscriptionOut(SubscriptionBase):
 
 
 class EMIBase(BaseModel):
-    user_id : int
-    category_id : int
-    payment_method_id : int
-    item_name : str = Field(min_length=2, max_length=50)#name of the product purchased 
-    total_amount : float
-    emi_months : int
-    monthly_installment : float#amount to pay each month
-    start_date : datetime
-    next_due_date : datetime
-    installments_paid : int
-    installments_remaining : int
-    status : str = Field(min_length=2, max_length=30)# "active", "cancelled"
+    item_name: str = Field(min_length=2, max_length=50)   # name of the product purchased
+    total_amount: float
+    emi_months: int
+    monthly_installment: float      # amount to pay each month
+    start_date: date
+    next_due_date: date
+    status: str = Field(min_length=2, max_length=30)      # "active", "completed", "defaulted"
 
 
 class EMICreate(EMIBase):
-    pass
+    user_id: int
+    category_id: int
+    payment_method_id: int
 
+
+class EMIUpdate(EMIBase):
+    installments_paid: int
+    installments_remaining: int
 
 
 class EMIOut(EMIBase):
-    id : int
+    id: int
+    user_id: int
+    category_id: int
+    payment_method_id: int
+    installments_paid: int
+    installments_remaining: int
+
     class Config:
-            from_attributes = True
+        from_attributes = True
+
+
+'''--------------------------------------------------------------------------------------------------------------------'''
+
+
+class PaymentHistoryBase(BaseModel):
+    amount_paid : float
+    paid_on : date
+    status : str = Field(min_length=2, max_length=30)
+
+class PaymentHistoryCreate(PaymentHistoryBase):
+    user_id : int
+    payment_method_id : int
+    subscription_id : int | None = None
+    emi_id : int | None = None
+
+class PaymentHistoryOut(PaymentHistoryBase):
+    id : int
+    user_id : int
+    payment_method_id : int
+    subscription_id : int | None = None
+    emi_id : int | None = None
+    class Config:
+        from_attributes = True

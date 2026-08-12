@@ -1,6 +1,6 @@
-from sqlalchemy import String, DateTime, Boolean, ForeignKey, Integer, Float
+from sqlalchemy import String, Date, Boolean, ForeignKey, Integer, Float
 from sqlalchemy.orm import Mapped, mapped_column
-from datetime import datetime, timezone
+from datetime import date,datetime, timezone
 from app.database import Base
 
 
@@ -11,8 +11,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     phone: Mapped[str] = mapped_column(String(15), nullable=True)
     password: Mapped[str] = mapped_column(String(150), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
-
+    created_at: Mapped[date] = mapped_column(Date, default=lambda: datetime.now(timezone.utc).date())
 
 
 class Category(Base):
@@ -41,8 +40,8 @@ class Subscription(Base):
     name : Mapped[str] = mapped_column(String(40))# "Netflix", "Jio ", "Airtel Wifi"
     amount : Mapped[float] = mapped_column(Float, nullable=False)# recurring charge amount
     billing_cycle : Mapped[str] = mapped_column(String(20)) #"monthly", "yearly", "weekly"
-    start_date : Mapped[datetime] = mapped_column(DateTime)
-    next_due_date : Mapped[datetime] = mapped_column(DateTime)
+    start_date : Mapped[datetime] = mapped_column(Date)
+    next_due_date : Mapped[datetime] = mapped_column(Date)
     status : Mapped[str] = mapped_column(String(20),nullable=False)# "active", "paused", "cancelled"
     auto_renew : Mapped[bool] = mapped_column(Boolean, default=False)
 
@@ -57,8 +56,21 @@ class EMI(Base):
     total_amount: Mapped[float] = mapped_column(Float, nullable=False)
     emi_months : Mapped[int] = mapped_column(Integer)
     monthly_installment : Mapped[float] = mapped_column(Float)
-    start_date : Mapped[datetime] = mapped_column(DateTime)
-    next_due_date : Mapped[datetime] = mapped_column(DateTime)
+    start_date : Mapped[datetime] = mapped_column(Date)
+    next_due_date : Mapped[datetime] = mapped_column(Date)
     installments_paid : Mapped[int] = mapped_column(Integer,default=0)
     installments_remaining : Mapped[int] = mapped_column(Integer)
     status : Mapped[str] = mapped_column(String(30))
+
+
+
+class PaymentHistory(Base):
+    __tablename__ = "payment_history"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    payment_method_id: Mapped[int] = mapped_column(ForeignKey("paymentmethod.id"))
+    subscription_id: Mapped[int] = mapped_column(ForeignKey("subscription.id"), nullable=True)
+    emi_id: Mapped[int] = mapped_column(ForeignKey("emi.id"), nullable=True)
+    amount_paid: Mapped[float] = mapped_column(Float, nullable=False)
+    paid_on: Mapped[date] = mapped_column(Date, nullable=False)
+    status: Mapped[str] = mapped_column(String(30), nullable=False)

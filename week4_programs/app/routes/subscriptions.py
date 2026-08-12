@@ -24,6 +24,11 @@ def create_subscription(sub_request: SubscriptionCreate, db: Session = Depends(g
     if exist_user is None or exist_category is None or exist_payment is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not Found")
 
+    if exist_category.type !="subscription":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This category is not valid for subscriptions"
+        )
     subscriptions = Subscription(**sub_request.model_dump())
     db.add(subscriptions)
     db.commit()
