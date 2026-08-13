@@ -5,6 +5,7 @@ from app.database import get_db
 from app.models import Subscription, User, PaymentMethod, Category
 from app.schema import SubscriptionCreate, SubscriptionOut, SubscriptionUpdate
 from typing import List
+from app.exist_404 import id_404
 
 
 
@@ -46,21 +47,13 @@ def get_subscriptions(db: Session = Depends(get_db)):
 
 @router.get("/{sub_id}", response_model=SubscriptionOut)
 def get_subscription(sub_id: int, db: Session = Depends(get_db)):
-    sub = select(Subscription).where(Subscription.id == sub_id)
-    search = db.execute(sub).scalar_one_or_none()
-    if search is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subscription Method not found")
-    return search
+    return id_404(db, Subscription, sub_id, "Subscription")
 
 
 
 @router.put("/{sub_id}", response_model=SubscriptionOut)
 def update_subscription(sub_id: int, sub_request: SubscriptionUpdate, db: Session = Depends(get_db)):
-    subscrp = select(Subscription).where(Subscription.id == sub_id)
-    updat = db.execute(subscrp).scalar_one_or_none()
-
-    if updat is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found")
+    updat = id_404(db, Subscription, sub_id, "Subscription")
 
     updat.name = sub_request.name
     updat.amount = sub_request.amount
@@ -77,10 +70,8 @@ def update_subscription(sub_id: int, sub_request: SubscriptionUpdate, db: Sessio
 
 @router.delete("/{sub_id}")
 def delete_subscription(sub_id: int, db:Session = Depends(get_db)):
-    sub = select(Subscription).where(Subscription.id == sub_id)
-    dele = db.execute(sub).scalar_one_or_none()
-    if dele is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    dele = id_404(db, Subscription, sub_id, "Subscription")
+
     db.delete(dele)
     db.commit()
 

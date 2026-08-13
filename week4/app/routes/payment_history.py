@@ -5,7 +5,7 @@ from app.database import get_db
 from app.models import Subscription, User, PaymentMethod, Category,EMI, PaymentHistory
 from app.schema import PaymentHistoryCreate, PaymentHistoryOut
 from typing import List
-
+from app.exist_404 import id_404
 
 router = APIRouter(prefix="/payment_history", tags=["Payment History"])
 
@@ -19,6 +19,7 @@ def create_payhistory(payhistory_request: PaymentHistoryCreate, db: Session = De
     exist_payment = db.execute(payment_stmt).scalar_one_or_none()
     if exist_user is None or exist_payment is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not Found")
+    
     if (payhistory_request.subscription_id is None) == (payhistory_request.emi_id is None):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -52,8 +53,4 @@ def get_paymentHistories(db: Session = Depends(get_db)):
 
 @router.get("/{payhistory_id}", response_model=PaymentHistoryOut)
 def get_payhistory(payhistory_id: int, db: Session = Depends(get_db)):
-    pay = select(PaymentHistory).where(PaymentHistory.id == payhistory_id)
-    search = db.execute(pay).scalar_one_or_none()
-    if search is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PAyment History not found")
-    return search
+    return id_404(db, PaymentHistory, payhistory_id, "Payment History")

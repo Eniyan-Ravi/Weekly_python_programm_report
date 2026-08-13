@@ -1,20 +1,21 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from app.database import get_db
 from app.models import PaymentMethod, User
 from app.schema import PaymentMethodCreate, PaymentMethodOut, PaymentMethodUpdate
 from typing import List
+from app.exist_404 import id_404
 
 
 
 router = APIRouter(prefix="/payment_methods", tags=["Payment Methods"])
+
+
+
 @router.post("/", response_model=PaymentMethodOut)
 def create_patmat(Paymat_request: PaymentMethodCreate, db: Session = Depends(get_db)):
-    user_stmt = select(User).where(User.id == Paymat_request.user_id)
-    exist_user=db.execute(user_stmt).scalar_one_or_none()
-    if exist_user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not Found")
+    exist_user = id_404(db, User, Paymat_request.user_id, "User")
 
     paymentmethod = PaymentMethod(**Paymat_request.model_dump())
     db.add(paymentmethod)
@@ -32,20 +33,12 @@ def get_pay_methods(db: Session = Depends(get_db)):
 
 @router.get("/{pay_method_id}", response_model=PaymentMethodOut)
 def get_pay_method(pay_method_id: int, db: Session = Depends(get_db)):
-    paym = select(PaymentMethod).where(PaymentMethod.id == pay_method_id)
-    search = db.execute(paym).scalar_one_or_none()
-    if search is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Payment Method not found")
-    return search
+    return id_404(db, PaymentMethod, pay_method_id, "Payment Method")
 
 
 @router.put("/{pay_method_id}", response_model=PaymentMethodOut)
 def update_pay_method(pay_method_id: int, paym_request: PaymentMethodUpdate, db: Session = Depends(get_db)):
-    paymet = select(PaymentMethod).where(PaymentMethod.id == pay_method_id)
-    updat = db.execute(paymet).scalar_one_or_none()
-
-    if updat is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Payment Method not found")
+    updat = id_404(db, PaymentMethod, pay_method_id, "Payment Method")
 
     updat.type = paym_request.type
     updat.provider_name = paym_request.provider_name
@@ -57,10 +50,7 @@ def update_pay_method(pay_method_id: int, paym_request: PaymentMethodUpdate, db:
 
 @router.delete("/{pay_method_id}")
 def delete_pay_method(pay_method_id: int, db:Session = Depends(get_db)):
-    paymet= select(PaymentMethod).where(PaymentMethod.id == pay_method_id)
-    dele = db.execute(paymet).scalar_one_or_none()
-    if dele is None:
-         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    dele = id_404(db, PaymentMethod, pay_method_id, "Payment Method")
     db.delete(dele)
     db.commit()
 

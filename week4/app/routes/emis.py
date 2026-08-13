@@ -5,6 +5,7 @@ from app.database import get_db
 from app.models import PaymentMethod, User, Category,EMI
 from app.schema import EMICreate, EMIOut, EMIUpdate
 from typing import List
+from app.exist_404 import id_404
 
 router = APIRouter(prefix="/emis", tags=["EMI"])
 
@@ -46,18 +47,11 @@ def get_emis(db: Session = Depends(get_db)):
 
 @router.get("/{emi_id}", response_model=EMIOut)
 def get_emi(emi_id: int, db: Session = Depends(get_db)):
-    emi = select(EMI).where(EMI.id == emi_id)
-    search = db.execute(emi).scalar_one_or_none()
-    if search is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = "EMI not found")
-    return search
+    return id_404(db, EMI, emi_id, "EMI")
 
 @router.put("/{emi_id}", response_model=EMIOut)
 def update_emi(emi_id: int, emi_reqest: EMIUpdate, db: Session = Depends(get_db)):
-    emi=select(EMI).where(EMI.id == emi_id)
-    update = db.execute(emi).scalar_one_or_none()
-    if update is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="EMI not found")
+    update = id_404(db, EMI, emi_id, "EMI")
     update.item_name = emi_reqest.item_name
     update.total_amount = emi_reqest.total_amount
     update.emi_months = emi_reqest.emi_months
@@ -74,10 +68,7 @@ def update_emi(emi_id: int, emi_reqest: EMIUpdate, db: Session = Depends(get_db)
 
 @router.delete("/{emi_id}")
 def delete_emi(emi_id : int, db: Session = Depends(get_db)):
-    emi = select(EMI).where(EMI.id == emi_id)
-    dele = db.execute(emi).scalar_one_or_none()
-    if dele is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = "EMI not found" )
+    dele = id_404(db, EMI, emi_id, "EMI")
     db.delete(dele)
     db.commit()
     return{
