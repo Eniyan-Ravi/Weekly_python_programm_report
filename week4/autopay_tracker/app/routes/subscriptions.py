@@ -5,7 +5,7 @@ from app.database import get_db
 from app.models import Subscription, User, PaymentMethod, Category
 from app.schema import SubscriptionCreate, SubscriptionOut, SubscriptionUpdate
 from typing import List
-from app.exist_404 import id_404
+from app.utility import require_exists
 
 
 
@@ -47,13 +47,13 @@ def get_subscriptions(db: Session = Depends(get_db)):
 
 @router.get("/{sub_id}", response_model=SubscriptionOut)
 def get_subscription(sub_id: int, db: Session = Depends(get_db)):
-    return id_404(db, Subscription, sub_id, "Subscription")
+    return require_exists(db, Subscription, sub_id, "Subscription")
 
 
 
 @router.put("/{sub_id}", response_model=SubscriptionOut)
 def update_subscription(sub_id: int, sub_request: SubscriptionUpdate, db: Session = Depends(get_db)):
-    updat = id_404(db, Subscription, sub_id, "Subscription")
+    updat = require_exists(db, Subscription, sub_id, "Subscription")
 
     updat.name = sub_request.name
     updat.amount = sub_request.amount
@@ -70,7 +70,7 @@ def update_subscription(sub_id: int, sub_request: SubscriptionUpdate, db: Sessio
 
 @router.delete("/{sub_id}")
 def delete_subscription(sub_id: int, db:Session = Depends(get_db)):
-    dele = id_404(db, Subscription, sub_id, "Subscription")
+    dele = require_exists(db, Subscription, sub_id, "Subscription")
 
     db.delete(dele)
     db.commit()

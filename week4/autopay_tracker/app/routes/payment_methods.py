@@ -5,7 +5,7 @@ from app.database import get_db
 from app.models import PaymentMethod, User
 from app.schema import PaymentMethodCreate, PaymentMethodOut, PaymentMethodUpdate
 from typing import List
-from app.exist_404 import id_404
+from app.utility import require_exists
 
 
 
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/payment_methods", tags=["Payment Methods"])
 
 @router.post("/", response_model=PaymentMethodOut)
 def create_patmat(Paymat_request: PaymentMethodCreate, db: Session = Depends(get_db)):
-    exist_user = id_404(db, User, Paymat_request.user_id, "User")
+    exist_user = require_exists(db, User, Paymat_request.user_id, "User")
 
     paymentmethod = PaymentMethod(**Paymat_request.model_dump())
     db.add(paymentmethod)
@@ -33,12 +33,12 @@ def get_pay_methods(db: Session = Depends(get_db)):
 
 @router.get("/{pay_method_id}", response_model=PaymentMethodOut)
 def get_pay_method(pay_method_id: int, db: Session = Depends(get_db)):
-    return id_404(db, PaymentMethod, pay_method_id, "Payment Method")
+    return require_exists(db, PaymentMethod, pay_method_id, "Payment Method")
 
 
 @router.put("/{pay_method_id}", response_model=PaymentMethodOut)
 def update_pay_method(pay_method_id: int, paym_request: PaymentMethodUpdate, db: Session = Depends(get_db)):
-    updat = id_404(db, PaymentMethod, pay_method_id, "Payment Method")
+    updat = require_exists(db, PaymentMethod, pay_method_id, "Payment Method")
 
     updat.type = paym_request.type
     updat.provider_name = paym_request.provider_name
@@ -50,7 +50,7 @@ def update_pay_method(pay_method_id: int, paym_request: PaymentMethodUpdate, db:
 
 @router.delete("/{pay_method_id}")
 def delete_pay_method(pay_method_id: int, db:Session = Depends(get_db)):
-    dele = id_404(db, PaymentMethod, pay_method_id, "Payment Method")
+    dele = require_exists(db, PaymentMethod, pay_method_id, "Payment Method")
     db.delete(dele)
     db.commit()
 

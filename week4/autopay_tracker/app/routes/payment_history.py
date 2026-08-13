@@ -5,7 +5,7 @@ from app.database import get_db
 from app.models import Subscription, User, PaymentMethod, Category,EMI, PaymentHistory
 from app.schema import PaymentHistoryCreate, PaymentHistoryOut
 from typing import List
-from app.exist_404 import id_404
+from app.utility import require_exists
 
 router = APIRouter(prefix="/payment_history", tags=["Payment History"])
 
@@ -53,4 +53,4 @@ def get_paymentHistories(db: Session = Depends(get_db)):
 
 @router.get("/{payhistory_id}", response_model=PaymentHistoryOut)
 def get_payhistory(payhistory_id: int, db: Session = Depends(get_db)):
-    return id_404(db, PaymentHistory, payhistory_id, "Payment History")
+    return require_exists(db, PaymentHistory, payhistory_id, "Payment History")

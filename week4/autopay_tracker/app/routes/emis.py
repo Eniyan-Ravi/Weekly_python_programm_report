@@ -5,7 +5,7 @@ from app.database import get_db
 from app.models import PaymentMethod, User, Category,EMI
 from app.schema import EMICreate, EMIOut, EMIUpdate
 from typing import List
-from app.exist_404 import id_404
+from app.utility import require_exists
 
 router = APIRouter(prefix="/emis", tags=["EMI"])
 
@@ -47,11 +47,11 @@ def get_emis(db: Session = Depends(get_db)):
 
 @router.get("/{emi_id}", response_model=EMIOut)
 def get_emi(emi_id: int, db: Session = Depends(get_db)):
-    return id_404(db, EMI, emi_id, "EMI")
+    return require_exists(db, EMI, emi_id, "EMI")
 
 @router.put("/{emi_id}", response_model=EMIOut)
 def update_emi(emi_id: int, emi_reqest: EMIUpdate, db: Session = Depends(get_db)):
-    update = id_404(db, EMI, emi_id, "EMI")
+    update = require_exists(db, EMI, emi_id, "EMI")
     update.item_name = emi_reqest.item_name
     update.total_amount = emi_reqest.total_amount
     update.emi_months = emi_reqest.emi_months
@@ -68,7 +68,7 @@ def update_emi(emi_id: int, emi_reqest: EMIUpdate, db: Session = Depends(get_db)
 
 @router.delete("/{emi_id}")
 def delete_emi(emi_id : int, db: Session = Depends(get_db)):
-    dele = id_404(db, EMI, emi_id, "EMI")
+    dele = require_exists(db, EMI, emi_id, "EMI")
     db.delete(dele)
     db.commit()
     return{

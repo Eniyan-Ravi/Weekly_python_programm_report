@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 
-def id_404(db: Session, model, id: int, name: str = "Resource"):
+def require_exists(db: Session, model, id: int, name: str = "Resource"):
 
     stmt = select(model).where(model.id == id)
     obj = db.execute(stmt).scalar_one_or_none()

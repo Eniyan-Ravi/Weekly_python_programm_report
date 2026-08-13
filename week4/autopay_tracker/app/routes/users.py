@@ -5,7 +5,7 @@ from app.database import get_db
 from app.models import User
 from app.schema import UserCreate, UserOut, UserUpdate
 from typing import List
-from app.exist_404 import id_404
+from app.utility import require_exists
 
 
 router = APIRouter(prefix="/user", tags=["Users"])
@@ -26,12 +26,12 @@ def get_users(db: Session = Depends(get_db)):
 
 @router.get("/{user_id}", response_model=UserOut)
 def get_user(user_id: int, db: Session = Depends(get_db)):
-    return id_404(db, User, user_id, "User")
+    return require_exists(db, User, user_id, "User")
 
 
 @router.put("/{user_id}", response_model=UserOut)
 def update_user(user_id: int,user_request: UserUpdate, db: Session = Depends(get_db)):
-    user = id_404(db, User, user_id, "User")
+    user = require_exists(db, User, user_id, "User")
     user.name = user_request.name
     user.email = user_request.email
     user.phone = user_request.phone
@@ -41,7 +41,7 @@ def update_user(user_id: int,user_request: UserUpdate, db: Session = Depends(get
 
 @router.delete("/{user_id}")
 def delete_user(user_id: int, db:Session = Depends(get_db)):
-    user = id_404(db, User, user_id, "User")
+    user = require_exists(db, User, user_id, "User")
     db.delete(user)
     db.commit()
 
