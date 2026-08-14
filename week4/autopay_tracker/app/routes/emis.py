@@ -1,76 +1,29 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import select
-from app.database import get_db
-from app.models import PaymentMethod, User, Category,EMI
-from app.schema import EMICreate, EMIOut, EMIUpdate
 from typing import List
-from app.utility import require_exists
+from app.database import get_db
+from app.schema import EMICreate, EMIOut, EMIUpdate
+from app.services import emi_service
 
 router = APIRouter(prefix="/emis", tags=["EMI"])
 
 @router.post("/", response_model=EMIOut)
-def create_emis(Emi_request: EMICreate, db: Session = Depends(get_db)):
-    user_stmt = select(User).where(User.id == Emi_request.user_id)
-    category_stmt = select(Category).where(Category.id == Emi_request.category_id)
-    payment_stmt = select(PaymentMethod).where(PaymentMethod.id == Emi_request.payment_method_id)
-
-    exist_user = db.execute(user_stmt).scalar_one_or_none()
-    exist_category = db.execute(category_stmt).scalar_one_or_none()
-    exist_payment = db.execute(payment_stmt).scalar_one_or_none()
-
-    if exist_user is None or exist_category is None or exist_payment is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not Found")
-
-    if exist_category.type != "emi":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This category is not valid for emis"
-        )
-    emi_data = Emi_request.model_dump()
-    emi_data["installments_paid"] = 0
-    emi_data["installments_remaining"] = Emi_request.emi_months
-
-    emis = EMI(**emi_data)
-    db.add(emis)
-    db.commit()
-    db.refresh(emis)
-    return emis
-
+def create_emi(emi_request: EMICreate, db: Session = Depends(get_db)):
+    return emi_service.create_emi(db, emi_request)
 
 @router.get("/", response_model=List[EMIOut])
 def get_emis(db: Session = Depends(get_db)):
-    emi = select(EMI)
-    result = db.execute(emi)
-    return result.scalars().all()
-
+    return emi_service.list_emis(db)
 
 @router.get("/{emi_id}", response_model=EMIOut)
 def get_emi(emi_id: int, db: Session = Depends(get_db)):
-    return require_exists(db, EMI, emi_id, "EMI")
+    return emi_service.get_emi(db, emi_id)
 
 @router.put("/{emi_id}", response_model=EMIOut)
-def update_emi(emi_id: int, emi_reqest: EMIUpdate, db: Session = Depends(get_db)):
-    update = require_exists(db, EMI, emi_id, "EMI")
-    update.item_name = emi_reqest.item_name
-    update.total_amount = emi_reqest.total_amount
-    update.emi_months = emi_reqest.emi_months
-    update.monthly_installment = emi_reqest.monthly_installment
-    update.start_date = emi_reqest.start_date
-    update.next_due_date = emi_reqest.next_due_date
-    update.installments_paid = emi_reqest.installments_paid
-    update.installments_remaining = emi_reqest.installments_remaining
-    update.status = emi_reqest.status
-
-    db.commit()
-    db.refresh(update)
-    return update
+def update_emi(emi_id: int, emi_request: EMIUpdate, db: Session = Depends(get_db)):
+    return emi_service.update_emi(db, emi_id, emi_request)
 
 @router.delete("/{emi_id}")
-def delete_emi(emi_id : int, db: Session = Depends(get_db)):
-    dele = require_exists(db, EMI, emi_id, "EMI")
-    db.delete(dele)
-    db.commit()
-    return{
-        "message":"EMI has been Deleted successfuly"
-    }
+def delete_emi(emi_id: int, db: Session = Depends(get_db)):
+    emi_service.delete_emi(db, emi_id)
+    return {"message": "EMI has been Deleted successfully"}

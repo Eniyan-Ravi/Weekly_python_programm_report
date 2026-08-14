@@ -1,57 +1,29 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import select
-from app.database import get_db
-from app.models import Category
-from app.schema import CategoryCreate, CategoryOut
 from typing import List
-from app.utility import require_exists
-
-
+from app.database import get_db
+from app.schema import CategoryCreate, CategoryOut
+from app.services import category_service
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
 
-
-
 @router.post("/", response_model=CategoryOut)
 def create_category(category_request: CategoryCreate, db: Session = Depends(get_db)):
-    category = Category(**category_request.model_dump())
-    db.add(category)
-    db.commit()
-    db.refresh(category)
-    return category
-
+    return category_service.create_category(db, category_request)
 
 @router.get("/", response_model=List[CategoryOut])
-def get_categoryies(db: Session = Depends(get_db)):
-    category = select(Category)
-    result = db.execute(category)
-    return result.scalars().all()
-
+def get_categories(db: Session = Depends(get_db)):
+    return category_service.list_categories(db)
 
 @router.get("/{category_id}", response_model=CategoryOut)
 def get_category(category_id: int, db: Session = Depends(get_db)):
-    return require_exists(db, Category, category_id, "Category")
-
+    return category_service.get_category(db, category_id)
 
 @router.put("/{category_id}", response_model=CategoryOut)
-def update_category(category_id: int,category_request: CategoryCreate, db: Session = Depends(get_db)):
-    
-    categor = require_exists(db, Category, category_id, "Category")
-
-    categor.name = category_request.name
-    categor.type = category_request.type
-    db.commit()
-    db.refresh(categor)
-    return categor
-
+def update_category(category_id: int, category_request: CategoryCreate, db: Session = Depends(get_db)):
+    return category_service.update_category(db, category_id, category_request)
 
 @router.delete("/{category_id}")
-def delete_category(category_id: int, db:Session = Depends(get_db)):
-    catego = require_exists(db, Category, category_id, "Category")
-    db.delete(catego)
-    db.commit()
-
-    return{
-         "message":"Category has been deleted"
-    }
+def delete_category(category_id: int, db: Session = Depends(get_db)):
+    category_service.delete_category(db, category_id)
+    return {"message": "Category has been deleted"}
