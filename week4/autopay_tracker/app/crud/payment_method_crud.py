@@ -3,9 +3,12 @@ from sqlalchemy import select
 from app.models import PaymentMethod
 
 def get_by_id(db: Session, pay_method_id: int):
-    return db.execute(select(PaymentMethod).where(PaymentMethod.id == pay_method_id)).scalar_one_or_none()
+    stmt = select(PaymentMethod).where(PaymentMethod.id == pay_method_id)
+    result = db.execute(stmt).scalar_one_or_none()
+    return result
 
 def get_all(db: Session):
+    
     return db.execute(select(PaymentMethod)).scalars().all()
 
 def create(db: Session, payment_method: PaymentMethod):
